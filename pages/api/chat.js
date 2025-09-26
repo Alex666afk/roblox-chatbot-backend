@@ -11,16 +11,24 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+  },
+  body: JSON.stringify({
+    model: "openai/gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: "You are a coding assistant inside a Roblox chat game. " +
+                 "Whenever you provide code, ALWAYS wrap it between ### markers. " +
+                 "Example: ###print('hi')###. Do not use ``` or other formats."
       },
-      body: JSON.stringify({
-        model: "openrouter/auto", // lets OpenRouter pick a valid free model
-        messages: [{ role: "user", content: msg }],
-      }),
-    });
+      { role: "user", content: msg }
+    ],
+  }),
+});
 
     const data = await response.json();
 
