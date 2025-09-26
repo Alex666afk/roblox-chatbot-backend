@@ -3,14 +3,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ error: "Missing message" });
-  }
-
   try {
-    // Call OpenRouter API
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Missing message" });
+    }
+
+    // Send request to OpenRouter
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -18,29 +18,35 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo", // you can swap to another model if you like
+        model: "openai/gpt-3.5-turbo", // you can swap to claude, mistral, etc
         messages: [
           {
             role: "system",
             content:
               "You are a Roblox coding assistant. " +
-              "When the user asks for scripts or code, ALWAYS put them inside ### blocks. " +
-              "Example: ###lua\nprint('Hello')\n###. " +
-              "Do not use ``` or other markers."
+              "When user asks for scripts, ALWAYS wrap code inside ### blocks. " +
+              "Example: ###lua\nprint('hi')\n###"
           },
           { role: "user", content: message }
         ],
       }),
     });
 
+    // Parse reply from OpenRouter
     const data = await response.json();
 
-    // Grab the reply text safely
-    const reply = data?.choices?.[0]?.message?.content || "🤖 No response";
+    if (!response.ok) {
+      return res.status(400).json({
+        error: data.error?.message || "OpenRouter request failed",
+      });
+    }
+
+    const reply = data?.choices?.[0]?.message?.content || "🤖 No reply";
 
     // Send reply back to Roblox
-    res.status(200).json({ reply });
+    return res.status(200).json({ reply });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 }
+\wrhg\iethj.iarthaet
